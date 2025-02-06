@@ -58,7 +58,7 @@ data "aws_subnet" "default" {
 
   filter {
     name   = "availability-zone"
-    values = random_shuffle.az.result 
+    values = [random_shuffle.az.result[0]] 
   }
 }
 
