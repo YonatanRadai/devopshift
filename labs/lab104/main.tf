@@ -45,6 +45,11 @@ resource "aws_subnet" "custom_subnet" {
   }
 }
 
+resource "random_shuffle" "az" {
+  input        = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  result_count = 1
+}
+
 data "aws_subnet" "default" {
   filter {
     name   = "default-for-az"
@@ -53,7 +58,7 @@ data "aws_subnet" "default" {
 
   filter {
     name   = "availability-zone"
-    values = ["us-east-1a"] 
+    values = random_shuffle.az.result 
   }
 }
 
