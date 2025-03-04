@@ -6,7 +6,7 @@ pipeline {
     environment {
 
 
-        
+
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-creds')
         DOCKER_REGISTRY = 'jonathanmradai'
         REPO_NAME = 'fe-exam'  // Change to 'be-exam' for backend pipeline
@@ -28,7 +28,7 @@ pipeline {
                     steps {
                         dir("exam-code/docker/${env.PROJECT}/src") { 
                             sh '''
-                            pip install flake8 
+                            pip3 install flake8 
                             flake8 . || true
                             '''
                         }
