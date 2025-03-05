@@ -12,6 +12,8 @@ services:
   backend-service:
     build: ./be
     image: "jonathanmradai/be-exam:latest"
+    ports:
+      - "5001:5001"
     networks:
       - internal
     environment:
