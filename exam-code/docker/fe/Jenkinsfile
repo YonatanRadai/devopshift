@@ -83,7 +83,7 @@ pipeline {
             steps{
                 sh '''
                 echo "Password length: ${#DOCKERHUB_CREDENTIALS_PSW}"
-                echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_USER --password-stdin
+                echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_USER --password-stdin --quit
                 docker push $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER
                 docker push $DOCKER_USER/$REPO_NAME:latest
                 '''
