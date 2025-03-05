@@ -60,7 +60,7 @@ pipeline {
         }
         stage('Run Tests in Container'){
             steps {
-                dir("exam-code/docker/${env.PROJECT}") {
+                dir("exam-code/docker/${env.PROJECT}/src") {
                 sh '''
                 pwd
                 ls
