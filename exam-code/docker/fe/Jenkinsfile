@@ -72,6 +72,8 @@ pipeline {
                     sh '''
                     docker compose up -d
                     sleep 10  # Allow services to start
+                    SERVER_URL="http://host.docker.internal:5001/fetch_price"
+                    curl -fs "$SERVER_URL" >/dev/null || exit 1
                     curl -f http://host.docker.internal:5002 || exit 1 # Adjust for backend if needed
                     docker compose down
                     '''
