@@ -1,7 +1,7 @@
 pipeline {
     agent {
         label 'docker'  
-        
+
     }
     environment {
         REPO_NAME = 'fe-exam'  // Change to 'be-exam' for backend pipeline
@@ -23,7 +23,7 @@ pipeline {
                     steps {
                         dir("exam-code/docker/${env.PROJECT}/src") { 
                             sh '''
-                            pip install --break-system-packages flake8
+                            pip install flake8
                             flake8 . || true
                             '''
                         }
@@ -33,7 +33,7 @@ pipeline {
                     steps {
                         dir("exam-code/docker/${env.PROJECT}/src") { 
                             sh '''
-                            pip install --break-system-packages bandit 
+                            pip install bandit 
                             bandit -r . || true
                             '''
                         }
@@ -44,7 +44,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 dir("exam-code/docker/${env.PROJECT}") {
-                    sh 'pip install --break-system-packages -r requirements.txt'
+                    sh 'pip install -r requirements.txt'
                 }
             }
         }
