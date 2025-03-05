@@ -73,7 +73,14 @@ pipeline {
                     docker compose up -d
                     sleep 10  # Allow services to start
                     SERVER_URL="http://host.docker.internal:5001/fetch_price"
-                    curl -fs "$SERVER_URL" >/dev/null || exit 1
+                    status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
+                    if [ "$status_code" -eq 200 ]; then
+                        cat response.json 
+                        exit 0
+                    fi
+                    echo "❌ API returned error: $status_code"
+                    cat response.json
+                    exit 1
                     curl -f http://host.docker.internal:5002 || exit 1 # Adjust for backend if needed
                     docker compose down
                     '''
