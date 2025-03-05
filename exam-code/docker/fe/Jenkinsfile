@@ -60,13 +60,9 @@ pipeline {
         }
         stage('Run Tests in Container'){
             steps {
-                dir("exam-code/docker/${env.PROJECT}/src") {
                 sh '''
-                pwd
-                ls
                 docker run --rm $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER pytest tests/ 
                 '''
-                }
             }
         }
 
