@@ -8,7 +8,7 @@ pipeline {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         //my addiction 
         PROJECT = "fe"
-        DOCKERHUB_USER = 'jonathanmradai'
+        DOCKER_USER = 'jonathanmradai'
         DOCKERHUB_CREDENTIALS_PSW = credentials("yonatantoken")
     }
     stages {
@@ -52,7 +52,6 @@ pipeline {
             steps {
                 dir("exam-code/docker/${env.PROJECT}") {
                     sh '''
-                    echo "docker build -t $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER ."
                     docker build -t $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER .
                     docker tag $DOCKER_REGISTRY/$REPO_NAME:$BUILD_NUMBER $DOCKER_REGISTRY/$REPO_NAME:latest
                     '''
