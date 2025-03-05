@@ -4,10 +4,10 @@ pipeline {
 
     }
     environment {
-        REPO_NAME = 'fe-exam'  // Change to 'be-exam' for backend pipeline
+        REPO_NAME = 'be-exam'  // Change to 'be-exam' for backend pipeline
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         //my addiction 
-        PROJECT = "fe"
+        PROJECT = "be"
         DOCKER_USER = 'jonathanmradai'
         DOCKERHUB_CREDENTIALS_PSW = credentials("yonatantoken")
     }
