@@ -52,7 +52,7 @@ pipeline {
             steps {
                 dir("exam-code/docker/${env.PROJECT}") {
                     sh '''
-                    docker build -t $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER .
+                    docker build -t $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER . --no-cache
                     docker tag $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER $DOCKER_USER/$REPO_NAME:latest
                     '''
                 }
@@ -64,7 +64,7 @@ pipeline {
                 sh '''
                 pwd
                 ls
-                docker run --rm $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER pytest tests/
+                docker run --rm $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER pytest tests/ 
                 '''
                 }
             }
