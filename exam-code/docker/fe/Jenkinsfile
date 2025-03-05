@@ -1,14 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        label 'docker'  
+    }
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('docker-hub-creds')
-        DOCKER_REGISTRY = 'jonathanmradai'
         REPO_NAME = 'fe-exam'  // Change to 'be-exam' for backend pipeline
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         //my addiction 
         PROJECT = "fe"
         DOCKERHUB_USER = 'jonathanmradai'
-        DOCKERHUB_CREDENTIALS_PSW = credentials("yonatan's token")
+        DOCKERHUB_CREDENTIALS_PSW = credentials("yonatantoken")
     }
     stages {
         stage('Clone Repository') {
@@ -69,10 +69,10 @@ pipeline {
             steps{
                 dir("exam-code/docker") {
                     sh '''
-                    docker-compose up -d
+                    docker compose up -d
                     sleep 20  # Allow services to start
                     # sh 'docker ps | grep -q 5002 && echo "Port 5002 is mapped and the container is running." ' // Adjust port for backend if needed
-                    docker-compose down
+                    docker compose down
                     '''
                 }               
             }
