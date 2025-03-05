@@ -83,7 +83,7 @@ pipeline {
                     exit 1
                     curl -f http://host.docker.internal:5002 || exit 1 # Adjust for backend if needed
                     docker compose down
-                    '''
+                    '''                 
                 }               
             }
         }
