@@ -1,6 +1,7 @@
 pipeline {
     agent {
         label 'docker'  
+        
     }
     environment {
         REPO_NAME = 'fe-exam'  // Change to 'be-exam' for backend pipeline
