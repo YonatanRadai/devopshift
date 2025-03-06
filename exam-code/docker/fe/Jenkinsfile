@@ -71,7 +71,7 @@ pipeline {
                 dir("exam-code/docker") {
                     sh '''
                     docker compose up -d
-                    sleep 10  # Allow services to start
+                    sleep 20  # Allow services to start
                     SERVER_URL="http://host.docker.internal:5001/fetch_price"
                     status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
                     if [ "$status_code" -nq 200 ]; then
