@@ -23,6 +23,8 @@ services:
 
   mysqldb:
       image: mysql:5.7
+      port:
+        - "5003:3306"
       networks:
         - internal
       environment:
