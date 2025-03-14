@@ -6,6 +6,7 @@ pool:
 
 variables:
   REPO_NAME: 'fe-exam'
+  IMAGE_TAG: '$(Build.BuildNumber)'
   PROJECT: 'fe'
   DOCKER_USER: 'jonathanmradai'
   DOCKERHUB_CREDENTIALS_PSW: '$(yonatantoken)' # Define this as a secret variable in Azure
@@ -48,16 +49,17 @@ stages:
 
     - script: |
         cd exam-code/docker/$(PROJECT)
-        docker build -t $(DOCKER_USER)/$(REPO_NAME):latest . --no-cache
+        docker build -t $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber) . --no-cache
+        docker tag $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber) $(DOCKER_USER)/$(REPO_NAME):latest
       displayName: 'Build Docker Image'
 
     - script: |
-        docker run --init $(DOCKER_USER)/$(REPO_NAME):latest pytest tests/
+        docker run --init $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber) pytest tests/
       displayName: 'Run Tests in Container'
 
     - script: |
         cd exam-code/docker
-        docker compose up -d
+        IMAGE_TAG=$(Build.BuildNumber) docker compose up -d
         sleep 20
         SERVER_URL="http://172.17.0.1:5001/fetch_price"
         status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
@@ -80,5 +82,6 @@ stages:
 
     - script: |
         echo "$(DOCKERHUB_CREDENTIALS_PSW)" | docker login -u $(DOCKER_USER) --password-stdin
+        docker push $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber)
         docker push $(DOCKER_USER)/$(REPO_NAME):latest
       displayName: 'Push to Docker Hub'
