@@ -70,7 +70,7 @@ pipeline {
             steps{
                 dir("exam-code/docker") {
                     sh '''
-                    docker compose up -d
+                    docker-compose up
                     sleep 20  # Allow services to start
                     SERVER_URL="http://host.docker.internal:5001/fetch_price"
                     status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
@@ -79,7 +79,7 @@ pipeline {
                         echo "❌ From Backend API returned error: $status_code"
                         cat response.json
                         echo "
-                        docker compose down
+                        docker-compose down
                         exit 1
                     fi
                     SERVER_URL = "http://host.docker.internal:5002"
@@ -89,10 +89,10 @@ pipeline {
                         echo "❌ From Frontend API returned error: $status_code"
                         cat response.json
                         echo "
-                        docker compose down
+                        docker-compose down
                         exit 1
                     fi
-                    docker compose down
+                    docker-compose down
                     '''                 
                 }               
             }
