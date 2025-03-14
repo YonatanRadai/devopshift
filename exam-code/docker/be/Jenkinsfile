@@ -1,0 +1,111 @@
+pipeline {
+    agent {
+        label 'docker'  
+
+    }
+    environment {
+        REPO_NAME = 'be-exam'  // Change to 'be-exam' for backend pipeline
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        //my addiction 
+        PROJECT = "be"
+        DOCKER_USER = 'jonathanmradai'
+        DOCKERHUB_CREDENTIALS_PSW = credentials("yonatantoken")
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'workshop/argo-jenkins-exam', url: 'https://github.com/YonatanRadai/devopshift.git'
+            }
+        }
+        stage('Lint & Security Scan') {
+            parallel {
+                stage('Lint') {
+                    steps {
+                        dir("exam-code/docker/${env.PROJECT}/src") { 
+                            sh '''
+                            pip install flake8
+                            flake8 . || true
+                            '''
+                        }
+                    }
+                }
+                stage('Security Scan') {
+                    steps {
+                        dir("exam-code/docker/${env.PROJECT}/src") { 
+                            sh '''
+                            pip install bandit 
+                            bandit -r . || true
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                dir("exam-code/docker/${env.PROJECT}") {
+                    sh 'pip install -r requirements.txt'
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                dir("exam-code/docker/${env.PROJECT}") {
+                    sh '''
+                    docker build -t $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER . --no-cache
+                    docker tag $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER $DOCKER_USER/$REPO_NAME:latest
+                    '''
+                }
+            }
+        }
+        stage('Run Tests in Container'){
+            steps {
+                sh '''
+                docker run --init $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER pytest tests/ 
+                '''
+            }
+        }
+
+        stage('Integration Test with Docker Compose'){
+            steps{
+                dir("exam-code/docker") {
+                    sh '''
+                    docker compose up -d
+                    sleep 20  # Allow services to start
+                    SERVER_URL="http://host.docker.internal:5001/fetch_price"
+                    status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
+                    if [ "$status_code" -nq 200 ]; then
+                        cat response.json
+                        echo "❌ From Backend API returned error: $status_code"
+                        cat response.json
+                        echo "
+                        docker compose down
+                        exit 1
+                    fi
+                    SERVER_URL = "http://host.docker.internal:5002"
+                    status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
+                    if [ "$status_code" -nq 200 ]; then
+                        cat response.json
+                        echo "❌ From Frontend API returned error: $status_code"
+                        cat response.json
+                        echo "
+                        docker compose down
+                        exit 1
+                    fi
+                    docker compose down
+                    '''                 
+                }               
+            }
+        }
+
+        stage('Push to Docker Hub'){
+            steps{
+                sh '''
+                echo \$DOCKERHUB_CREDENTIALS_PSW | docker login -u \$DOCKER_USER --password-stdin
+                docker push $DOCKER_USER/$REPO_NAME:$BUILD_NUMBER
+                docker push $DOCKER_USER/$REPO_NAME:latest
+                '''
+            }
+        }
+    }
+}
