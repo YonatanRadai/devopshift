@@ -72,7 +72,7 @@ pipeline {
                     sh '''
                     docker compose up -d
                     sleep 20  # Allow services to start
-                    SERVER_URL="http://host.docker.internal:5001/fetch_price"
+                    SERVER_URL="http://172.17.0.1:5001/fetch_price"
                     status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
                     if [ "$status_code" -nq 200 ]; then
                         cat response.json
@@ -82,7 +82,7 @@ pipeline {
                         docker-compose down
                         exit 1
                     fi
-                    SERVER_URL = "http://host.docker.internal:5002"
+                    SERVER_URL = "http://172.17.0.1:5002"
                     status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
                     if [ "$status_code" -nq 200 ]; then
                         cat response.json
