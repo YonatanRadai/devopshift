@@ -1,7 +1,6 @@
 services:
   web:
     build: ./fe
-    image: "jonathanmradai/fe-exam:latest"
     ports:
       - "5002:5002"
     depends_on:
@@ -11,7 +10,6 @@ services:
 
   backend-service:
     build: ./be
-    image: "jonathanmradai/be-exam:latest"
     ports:
       - "5001:5001"
     networks:
@@ -22,19 +20,15 @@ services:
       - MYSQL_PASSWORD=123456
 
   mysqldb:
-      image: mysql:5.7
-      ports:
-        - "5003:3306"
-      networks:
-        - internal
-      environment:
-        MYSQL_ROOT_PASSWORD: 123456
-        # create database name crypto_db
-        MYSQL_DATABASE: crypto_db
+    image: mysql:5.7
+    ports:
+      - "5003:3306"
+    networks:
+      - internal
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: crypto_db
 
 networks:
   internal:
     driver: bridge
-
-
-  
