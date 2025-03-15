@@ -1,0 +1,87 @@
+trigger:
+- workshop/azure-pipline
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  REPO_NAME: 'fe-exam'
+  IMAGE_TAG: '$(Build.BuildNumber)'
+  PROJECT: 'fe'
+  DOCKER_USER: 'jonathanmradai'
+  DOCKERHUB_CREDENTIALS_PSW: '$(yonatantoken)' # Define this as a secret variable in Azure
+
+stages:
+- stage: BuildAndTest
+  jobs:
+  - job: BuildTestPush
+    steps:
+    - script: |
+        # Check if Docker is installed
+        docker --version || { echo "Docker not found, installing..."; sudo apt-get update && sudo apt-get install -y docker.io; }
+        # Check if Docker Compose is installed
+        docker compose version || { echo "Docker Compose not found, installing..."; sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose; }
+        # Verify installations
+        docker --version
+        docker compose version
+      displayName: 'Ensure Docker and Docker Compose are installed'
+
+    - checkout: self
+      submodules: true
+      persistCredentials: true
+
+    - script: |
+        cd exam-code/docker/$(PROJECT)/src
+        pip install flake8
+        flake8 . || true
+      displayName: 'Lint'
+
+    - script: |
+        cd exam-code/docker/$(PROJECT)/src
+        pip install bandit
+        bandit -r . || true
+      displayName: 'Security Scan'
+
+    - script: |
+        cd exam-code/docker/$(PROJECT)
+        pip install -r requirements.txt
+      displayName: 'Install Dependencies'
+
+    - script: |
+        cd exam-code/docker/$(PROJECT)
+        docker build -t $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber) . --no-cache
+        docker tag $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber) $(DOCKER_USER)/$(REPO_NAME):latest
+      displayName: 'Build Docker Image'
+
+    - script: |
+        docker run --init $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber) pytest tests/
+      displayName: 'Run Tests in Container'
+
+    - script: |
+        cd exam-code/docker
+        IMAGE_TAG=$(Build.BuildNumber) docker compose up -d
+        sleep 20
+        SERVER_URL="http://172.17.0.1:5001/fetch_price"
+        status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
+        if [ "$status_code" -ne 200 ]; then
+          cat response.json
+          echo "❌ From Backend API returned error: $status_code"
+          docker compose down
+          exit 1
+        fi
+        SERVER_URL="http://172.17.0.1:5002"
+        status_code=$(curl -s -o response.json -w "%{http_code}" "$SERVER_URL")
+        if [ "$status_code" -ne 200 ]; then
+          cat response.json
+          echo "❌ From Frontend API returned error: $status_code"
+          docker compose down
+          exit 1
+        fi
+        docker compose down
+      displayName: 'Integration Test with Docker Compose'
+
+    - script: |
+        echo "$(DOCKERHUB_CREDENTIALS_PSW)" | docker login -u $(DOCKER_USER) --password-stdin
+        docker push $(DOCKER_USER)/$(REPO_NAME):$(Build.BuildNumber)
+        docker push $(DOCKER_USER)/$(REPO_NAME):latest
+      displayName: 'Push to Docker Hub'
